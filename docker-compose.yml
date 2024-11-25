@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  fastapi:
+    restart: always
+    build:
+      context: ./fastapi
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./fastapi/src:/app/src
+      - ./fastapi/src/logs:/app/src/logs
+      - ./fastapi/src/bot.yaml:/app/src/bot.yaml
+
+    environment:
+      - PYTHONPATH=/app/src
+    command: [
+      "uvicorn", "src.server:app", "--host", "0.0.0.0", "--port", "8000", "--log-level", "debug"
+    ]
+
