@@ -54,7 +54,7 @@ function moveSnake(direction) {
       if (data.status === "success") {
         // 스코어가 10 이상일 경우 성공 메시지 표시
         const key = data.key || "No key available";
-        document.getElementById("success-message").innerText = `성공: 키 ${key}`;
+        document.getElementById("success-message").innerText = `성공 키 : ${key}`;
         document.getElementById("success-message").classList.remove("hidden");
       }
 
