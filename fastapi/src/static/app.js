@@ -31,7 +31,7 @@ function startGame() {
       updateBoard(data.snake, data.apple);
       document.getElementById("score").innerText = `Score: ${data.score}`;
       if (gameInterval) clearInterval(gameInterval);
-      gameInterval = setInterval(() => moveSnake(currentDirection), 500);
+      gameInterval = setInterval(() => moveSnake(currentDirection), 250); // 이동 속도
     });
 }
 

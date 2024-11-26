@@ -97,7 +97,7 @@ def start_game():
     :return: 새로운 게임의 초기 상태
     """
     game_id = str(uuid.uuid4())
-    initial_snake = [(5, 5)]
+    initial_snake = [(10, 10)]
     apple = SnakeGame.generate_apple(initial_snake)
     game = SnakeGame(game_id=game_id, snake=initial_snake, direction="UP", apple=apple)
     games[game_id] = game
