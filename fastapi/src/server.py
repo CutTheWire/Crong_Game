@@ -1,26 +1,16 @@
 import os
-import yaml
 import uuid
-import uvicorn
-import asyncio
 from dotenv import load_dotenv
-from asyncio import TimeoutError
-from typing import List, Tuple
-from pydantic import ValidationError, BaseModel
-from contextlib import asynccontextmanager
-
-from fastapi.staticfiles import StaticFiles
+from fastapi import FastAPI, HTTPException, Request, Query
 from fastapi.responses import HTMLResponse
-from fastapi.templating import Jinja2Templates
+from fastapi.staticfiles import StaticFiles
 from fastapi.openapi.utils import get_openapi
+from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi import (APIRouter, Depends, FastAPI, HTTPException, Request)
-from starlette.responses import JSONResponse, StreamingResponse
-from starlette.concurrency import run_in_threadpool
-from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.middleware.sessions import SessionMiddleware
-
-from utils.Models import StartGameResponse, MoveRequest, MoveResponse, Move
+from starlette.middleware.base import BaseHTTPMiddleware
+from utils.Models import Snake_Response, SnakeMove_Request
+from utils.Snake_game import SnakeGame
 import utils.Error_handlers as ChatError
 
 load_dotenv()
@@ -34,17 +24,13 @@ class ExceptionMiddleware(BaseHTTPMiddleware):
             response = await call_next(request)
             return response
         except Exception as e:
-            # 예외를 안전하게 처리
             return await ChatError.generic_exception_handler(request, e)
 
-
 app.add_middleware(ExceptionMiddleware)
-
 app.add_middleware(
     SessionMiddleware,
     secret_key=os.getenv("SESSION_KEY", "default-secret")
 )
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -79,105 +65,97 @@ app.openapi = custom_openapi
 app.mount("/static", StaticFiles(directory="/app/src/static"), name="static")
 templates = Jinja2Templates(directory="/app/src/templates")
 
-@app.get("/", response_class=HTMLResponse)
-async def serve_homepage(request: Request):
+@app.get("/snake", response_class=HTMLResponse)
+async def serve_homepage(request: Request, count: int = Query(...)):
     """
-    기본 HTML 페이지 제공
+    /snake 경로에서 게임 시작 페이지를 반환.
+    count 값으로 계산된 키를 저장.
     """
+    # 키 생성 로직
+    calculated_key = (
+        count * 10000 +
+        (count + 4.2) * 1000 +
+        (count + 1.1) * 100 +
+        count * 10 +
+        (count % 10)
+    )
+    salted_key = f"{int(calculated_key)}"
+
+    # 키를 세션에 저장
+    request.session['generated_key'] = salted_key
+
+    # 게임 페이지 렌더링
     return templates.TemplateResponse("index.html", {"request": request})
 
 # 게임 데이터 저장소 (임시 메모리 저장)
-
-# 게임 상태 저장
 games = {}
 
-class SnakeGame(BaseModel):
-    game_id: str
-    snake: List[Tuple[int, int]]
-    direction: str
-    apple: Tuple[int, int]
-    score: int
-    status: str  # "ongoing", "game_over"
-
-@app.post("/snake/start", response_model=SnakeGame)
+@app.post("/snake/start", response_model=Snake_Response)
 def start_game():
     """
-    지렁이 게임 시작
+    새로운 게임을 시작합니다.
+    :return: 새로운 게임의 초기 상태
     """
     game_id = str(uuid.uuid4())
     initial_snake = [(5, 5)]
-    apple = generate_apple(initial_snake)
-    games[game_id] = {
-        "snake": initial_snake,
-        "direction": "UP",
-        "apple": apple,
-        "score": 0,
-        "status": "ongoing"
-    }
-    return {"game_id": game_id, **games[game_id]}
+    apple = SnakeGame.generate_apple(initial_snake)
+    game = SnakeGame(game_id=game_id, snake=initial_snake, direction="UP", apple=apple)
+    games[game_id] = game
+    return Snake_Response(**game.__dict__)
 
-@app.post("/snake/move", response_model=SnakeGame)
-def move_snake(game_id: str, direction: str):
+@app.post("/snake/move", response_model=dict)
+def move_snake(move_request: SnakeMove_Request, request: Request):
     """
-    지렁이 이동
+    뱀을 이동시킵니다.
     """
+    game_id = move_request.game_id
+    direction = move_request.direction
+
     if game_id not in games:
         raise HTTPException(status_code=404, detail="Game not found")
 
     game = games[game_id]
-    if game["status"] == "game_over":
-        return game
 
-    # 방향 업데이트
-    if direction in ["UP", "DOWN", "LEFT", "RIGHT"]:
-        game["direction"] = direction
+    if game.status == "game_over":
+        return {"status": "game_over", "snake": game.snake, "apple": game.apple, "score": game.score}
+
+    if direction not in ["UP", "DOWN", "LEFT", "RIGHT"]:
+        raise HTTPException(status_code=422, detail=f"Invalid direction: {direction}")
+
+    # 반대 방향으로 이동 방지 (UP <-> DOWN, LEFT <-> RIGHT)
+    opposite_directions = {"UP": "DOWN", "DOWN": "UP", "LEFT": "RIGHT", "RIGHT": "LEFT"}
+    if direction == opposite_directions[game.direction]:
+        direction = game.direction  # 기존 방향 유지
+
+    # 새로운 방향 업데이트
+    game.direction = direction
 
     # 새로운 머리 위치 계산
-    new_head = calculate_new_head(game["snake"], game["direction"])
+    new_head = game.calculate_new_head()
 
-    # 충돌 확인
-    if check_collision(new_head, game["snake"]):
-        game["status"] = "game_over"
-        return game
+    if game.check_collision(new_head):
+        game.status = "game_over"
+        return {"status": "game_over", "snake": game.snake, "apple": game.apple, "score": game.score}
 
-    # 사과 먹기
-    if new_head == game["apple"]:
-        game["snake"].insert(0, new_head)  # 길이 증가
-        game["apple"] = generate_apple(game["snake"])
-        game["score"] += 1
+    if new_head == game.apple:
+        game.snake.insert(0, new_head)  # 길이 증가
+        game.apple = SnakeGame.generate_apple(game.snake)
+        game.score += 1
     else:
-        game["snake"].insert(0, new_head)
-        game["snake"].pop()  # 길이 유지
+        game.snake.insert(0, new_head)
+        game.snake.pop()  # 길이 유지
 
-    return game
+    # 승리 조건: 스코어가 10 이상일 경우 키 반환
+    if game.score >= 10 and game.status != "success":
+        game.status = "success"
+        generated_key = request.session.get('generated_key', "No key available")
+        return {
+            "status": "success",
+            "key": generated_key,
+            "snake": game.snake,
+            "apple": game.apple,
+            "score": game.score
+        }
 
-def calculate_new_head(snake: List[Tuple[int, int]], direction: str) -> Tuple[int, int]:
-    head_x, head_y = snake[0]
-    if direction == "UP":
-        return head_x - 1, head_y
-    elif direction == "DOWN":
-        return head_x + 1, head_y
-    elif direction == "LEFT":
-        return head_x, head_y - 1
-    elif direction == "RIGHT":
-        return head_x, head_y + 1
-
-def check_collision(new_head: Tuple[int, int], snake: List[Tuple[int, int]]) -> bool:
-    """
-    벽 또는 자신과의 충돌 확인
-    """
-    x, y = new_head
-    if x < 0 or x >= 20 or y < 0 or y >= 20:  # 벽 충돌
-        return True
-    if new_head in snake:  # 자기 자신과 충돌
-        return True
-    return False
-
-def generate_apple(snake: List[Tuple[int, int]]) -> Tuple[int, int]:
-    """
-    새로운 사과 생성
-    """
-    while True:
-        apple = (random.randint(0, 19), random.randint(0, 19))
-        if apple not in snake:
-            return apple
+    # 승리 이후에도 게임 진행
+    return {"status": "ongoing", "snake": game.snake, "apple": game.apple, "score": game.score}

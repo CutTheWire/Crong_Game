@@ -5,6 +5,13 @@ body {
     align-items: center;
     justify-content: center;
     background-color: #f8f9fa;
+    color: #000;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.dark-mode {
+    background-color: #121212;
+    color: #ffffff;
 }
 
 h1 {
@@ -31,4 +38,58 @@ h1 {
 
 #game-container {
     text-align: center;
+}
+
+#direction-pad {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+}
+
+#direction-pad button {
+    width: 50px;
+    height: 50px;
+    font-size: 18px;
+    cursor: pointer;
+}
+
+#direction-pad div {
+    display: flex;
+    justify-content: center;
+    gap: 5px;
+}
+
+/* 테마 변경 버튼 */
+#theme-switcher {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    display: flex;
+    gap: 10px;
+}
+
+#theme-switcher button {
+    padding: 5px 10px;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+#success-message {
+    margin-top: 10px;
+    font-size: 16px;
+    font-weight: bold;
+    color: green;
+}
+
+#final-message {
+    margin-top: 20px;
+    font-size: 20px;
+    font-weight: bold;
+    color: blue;
+}
+
+.hidden {
+    display: none;
 }

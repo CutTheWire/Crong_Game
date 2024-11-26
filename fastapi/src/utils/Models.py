@@ -1,20 +1,14 @@
-from pydantic import BaseModel, Field
-from typing import List, Optional
+from pydantic import BaseModel
+from typing import List, Tuple
 
-class Move(BaseModel):
-    x: int = Field(..., ge=0, le=9, description="돌의 X 좌표 (0~18)")
-    y: int = Field(..., ge=0, le=9, description="돌의 Y 좌표 (0~18)")
-
-class StartGameResponse(BaseModel):
+class Snake_Response(BaseModel):
     game_id: str
-    board: List[List[str]] = Field(..., description="오목판 상태")
-
-class MoveRequest(BaseModel):
+    snake: List[Tuple[int, int]]
+    direction: str
+    apple: Tuple[int, int]
+    score: int
+    status: str  # "ongoing", "game_over"
+    
+class SnakeMove_Request(BaseModel):
     game_id: str
-    user_move: Move
-
-class MoveResponse(BaseModel):
-    game_id: str
-    board: List[List[str]]
-    ai_move: Optional[Move] = None
-    result: Optional[str] = Field(None, description="게임 결과 (win/lose/draw/ongoing)")
+    direction: str

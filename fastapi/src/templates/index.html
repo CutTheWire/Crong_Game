@@ -7,11 +7,25 @@
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
+    <div id="theme-switcher">
+        <button id="dark-mode">Dark Mode</button>
+        <button id="light-mode">Light Mode</button>
+    </div>
     <h1>Snake Game</h1>
+    <div id="success-message" class="hidden"></div>
+    <div id="final-message" class="hidden"></div>
     <div id="game-container">
         <table id="snake-board"></table>
         <p id="score">Score: 0</p>
         <button id="start-game">Start Game</button>
+        <div id="direction-pad">
+            <button id="btn-up">↑</button>
+            <div>
+                <button id="btn-left">←</button>
+                <button id="btn-down">↓</button>
+                <button id="btn-right">→</button>
+            </div>
+        </div>
     </div>
     <script src="/static/app.js"></script>
 </body>
