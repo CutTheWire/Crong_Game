@@ -7,17 +7,21 @@
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-    <div id="theme-switcher">
-        <button id="dark-mode">Dark Mode</button>
-        <button id="light-mode">Light Mode</button>
-    </div>
     <h1>Snake Game</h1>
+    <div id="header-controls">
+        <button id="start-game">Start Game</button>
+        <div id="theme-switcher">
+            <button id="dark-mode">Dark Mode</button>
+            <button id="light-mode">Light Mode</button>
+        </div>
+    </div>
     <div id="success-message" class="hidden"></div>
     <div id="final-message" class="hidden"></div>
     <div id="game-container">
-        <table id="snake-board"></table>
+        <div id="board-wrapper">
+            <table id="snake-board"></table>
+        </div>
         <p id="score">Score: 0</p>
-        <button id="start-game">Start Game</button>
         <div id="direction-pad">
             <button id="btn-up">↑</button>
             <div>

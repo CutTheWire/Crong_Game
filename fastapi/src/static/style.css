@@ -1,3 +1,4 @@
+/* 스크롤 비활성화 */
 body {
     font-family: Arial, sans-serif;
     display: flex;
@@ -7,24 +8,71 @@ body {
     background-color: #f8f9fa;
     color: #000;
     transition: background-color 0.3s, color 0.3s;
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    overflow: hidden; /* 스크롤 비활성화 */
 }
 
+/* 다크 모드 스타일 */
 .dark-mode {
     background-color: #121212;
     color: #ffffff;
 }
 
+/* 타이틀 스타일 */
 h1 {
-    margin-bottom: 20px;
+    margin-bottom: 10px;
 }
 
+/* 상단 컨트롤 영역 */
+#header-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 90%;
+    max-width: 400px;
+    margin-bottom: 10px;
+}
+
+/* 컨트롤 버튼 */
+#header-controls button {
+    padding: 10px 15px;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+/* 게임 보드와 방향 버튼을 포함하는 전체 컨테이너 */
+#game-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    height: calc(100vh - 100px); /* 타이틀과 컨트롤 영역 제외 */
+    width: 100%;
+}
+
+/* 보드 영역 */
+#board-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 90%;
+    max-width: 400px;
+    aspect-ratio: 1; /* 정사각형 */
+}
+
+/* 보드 스타일 */
 #snake-board {
+    width: 100%;
+    height: 100%;
     border-collapse: collapse;
 }
 
 #snake-board td {
-    width: 20px;
-    height: 20px;
+    width: calc(100% / 20); /* 20x20 보드 */
+    height: calc(100% / 20);
     border: 1px solid #ccc;
 }
 
@@ -36,12 +84,8 @@ h1 {
     background-color: #ff5252;
 }
 
-#game-container {
-    text-align: center;
-}
-
+/* 방향 버튼 패드 */
 #direction-pad {
-    margin-top: 20px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -49,8 +93,8 @@ h1 {
 }
 
 #direction-pad button {
-    width: 50px;
-    height: 50px;
+    width: 60px; /* 방향 버튼 크기 */
+    height: 60px;
     font-size: 18px;
     cursor: pointer;
 }
@@ -61,21 +105,7 @@ h1 {
     gap: 5px;
 }
 
-/* 테마 변경 버튼 */
-#theme-switcher {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    display: flex;
-    gap: 10px;
-}
-
-#theme-switcher button {
-    padding: 5px 10px;
-    font-size: 14px;
-    cursor: pointer;
-}
-
+/* 성공 메시지 */
 #success-message {
     margin-top: 10px;
     font-size: 16px;
@@ -83,6 +113,7 @@ h1 {
     color: green;
 }
 
+/* 게임 종료 메시지 */
 #final-message {
     margin-top: 20px;
     font-size: 20px;
@@ -90,6 +121,7 @@ h1 {
     color: blue;
 }
 
+/* 숨김 클래스 */
 .hidden {
     display: none;
 }
